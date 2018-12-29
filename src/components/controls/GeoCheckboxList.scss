@@ -1,0 +1,23 @@
+.geocheckboxlist {
+  width: 400px;
+
+  input[type='search'] {
+    margin-bottom: 4px;
+    width: 100%;
+  }
+
+  .geocheckboxlist__contents {
+    height: 300px;
+    overflow-y: auto;
+
+    border: silver 1px solid;
+    padding: 2px;
+
+    label {
+      input {
+        margin-right: 4px;
+      }
+      padding: 2px;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+@import '../../main';
+
+.input-form {
+
+  .input-form__save {
+    margin-top: 16px;
+  }
+
+  &.input-form--loading, &.input-form--saving, &.input-form--error {
+    .input-form__content {
+      position: relative;
+      .input-form__fields__container, .input-form__save-button {
+        visibility: hidden;
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+.adformatcheckboxlist {
+  max-height: 300px;
+  min-height: 200px;
+  overflow-y: auto;
+
+  border: silver 1px solid;
+  padding: 2px;
+
+  width: 400px;
+
+  label {
+    input {
+      margin-right: 4px;
+    }
+    padding: 2px;
+  }
+}
