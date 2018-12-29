@@ -5,6 +5,7 @@ import InputForm from '../controls/InputForm.jsx';
 import CancelOnUnmount from '../../services/CancelOnUnmount.js';
 import CampaignService from '../../services/CampaignService.js'
 import Recommendations from '../controls/Recommendations.jsx';
+import CampaignCoreSettingsRecommendationService from '../../services/CampaignCoreSettingsRecommendationService.js';
 
 export default class CoreSettings extends React.Component {
 
@@ -101,6 +102,7 @@ export default class CoreSettings extends React.Component {
                     recommendationType='CAMPAIGN_CORE_SETTINGS_RECOMMENDATIONS'
                     campaignId={this.props.campaignId}
                     canAddRecommendation={true}
+                    recommendationService={CampaignCoreSettingsRecommendationService}
                 />
             </div>
         );

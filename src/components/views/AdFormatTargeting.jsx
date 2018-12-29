@@ -6,6 +6,7 @@ import CampaignService from '../../services/CampaignService.js'
 import AdFormatService from '../../services/AdFormatService.js'
 import AdFormatCheckboxList from '../controls/AdFormatCheckboxList.jsx'
 import Recommendations from '../controls/Recommendations.jsx'
+import CampaignAdFormatRecommendationService from '../../services/CampaignAdFormatRecommendationService.js';
 
 export default class AdFormatTargeting extends React.Component {
 
@@ -139,7 +140,12 @@ export default class AdFormatTargeting extends React.Component {
                         getIsChecked={this.handleGetIsAdFormatChecked}
                     />
                 </InputForm>
-                <Recommendations recommendationType='CAMPAIGN_ADFORMAT_RECOMMENDATIONS' campaignId={this.props.campaignId} canAddRecommendation={true}/>
+                <Recommendations 
+                    recommendationType='CAMPAIGN_ADFORMAT_RECOMMENDATIONS' 
+                    campaignId={this.props.campaignId} 
+                    canAddRecommendation={true}
+                    recommendationService={CampaignAdFormatRecommendationService}
+                />
             </div>
         );
     }

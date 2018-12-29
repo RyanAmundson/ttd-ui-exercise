@@ -6,6 +6,7 @@ import CancelOnUnmount from '../../services/CancelOnUnmount.js'
 import GeoService from '../../services/GeoService.js'
 import GeoCheckboxList from '../controls/GeoCheckboxList.jsx'
 import Recommendations from '../controls/Recommendations.jsx'
+import CampaignGeoRecommendationService from '../../services/CampaignGeoRecommendationService.js';
 
 export default class GeoTargeting extends React.Component {
 
@@ -178,7 +179,10 @@ export default class GeoTargeting extends React.Component {
                         getIsChecked={this.handleGetIsGeoChecked}
                     />
                 </InputForm>
-                <Recommendations recommendationType='CAMPAIGN_GEO_RECOMMENDATIONS' campaignId={this.props.campaignId}  canAddRecommendation={false}/>
+                <Recommendations recommendationType='CAMPAIGN_GEO_RECOMMENDATIONS' 
+                                campaignId={this.props.campaignId}  
+                                canAddRecommendation={false}
+                                recommendationService={CampaignGeoRecommendationService}/>
             </div>
         );
     }

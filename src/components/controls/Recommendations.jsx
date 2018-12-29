@@ -10,7 +10,8 @@ export default class Recommendations extends React.Component {
     static propTypes = {
         recommendationType: PropTypes.string.isRequired,
         campaignId: PropTypes.string.isRequired,
-        canAddRecommendation: PropTypes.bool.isRequired
+        canAddRecommendation: PropTypes.bool.isRequired,
+        recommendationService: PropTypes.any.isRequired
 
     };
 
@@ -27,32 +28,15 @@ export default class Recommendations extends React.Component {
     }
 
     componentDidMount() {
-        if (this.props.recommendationType === 'CAMPAIGN_CORE_SETTINGS_RECOMMENDATIONS') {
-            CancelOnUnmount.track(this, CampaignCoreSettingsRecommendationService
+        console.log(this.props.recommendationService)
+        CancelOnUnmount.track(this,
+            this.props.recommendationService
                 .getAllRecommendations(this.props.campaignId)
                 .then(recommendations => {
                     this.setState({
                         recommendations: recommendations
                     })
                 }));
-        } else if (this.props.recommendationType === 'CAMPAIGN_GEO_RECOMMENDATIONS') {
-            CancelOnUnmount.track(this, CampaignGeoRecommendationService
-                .getAllRecommendations(this.props.campaignId)
-                .then(recommendations => {
-                    this.setState({
-                        recommendations: recommendations
-                    })
-                }));
-
-        } else if (this.props.recommendationType === 'CAMPAIGN_ADFORMAT_RECOMMENDATIONS') {
-            CancelOnUnmount.track(this, CampaignAdFormatRecommendationService
-                .getAllRecommendations(this.props.campaignId)
-                .then(recommendations => {
-                    this.setState({
-                        recommendations: recommendations
-                    })
-                }));
-        }
     }
 
     componentWillUnmount() {
@@ -64,36 +48,26 @@ export default class Recommendations extends React.Component {
     }
 
     handleAddRecommendation() {
-        const recommendationText = this.state.newRecommendationText;
+        console.log(this.state.newRecommendationText, this.props.recommendationService)
+        if (this.state.newRecommendationText == "" || null) return;
+        
+        CancelOnUnmount.track(this,this.props.recommendationService
+            .addRecommendation(this.props.campaignId, this.state.newRecommendationText)
+            .then(recommendation => {
+                this.setState({ recommendations: this.state.recommendations.concat(recommendation) });
+                this.setState({ newRecommendationText: '' });
+            })
+            .catch(() => {
+                alert('Couldn\'t add recommendation, please try again.');
+            }));
 
-        this.setState({ newRecommendationText: '' });
-
-        if (this.props.recommendationType === 'CAMPAIGN_CORE_SETTINGS_RECOMMENDATIONS') {
-            CancelOnUnmount.track(this, CampaignCoreSettingsRecommendationService
-                .addRecommendation(this.props.campaignId, recommendationText )
-                .then(recommendation => {
-                    this.setState({ recommendations: this.state.recommendations.concat(recommendation) })
-                })
-                .catch(() => {
-                    alert('Couldn\'t add recommendation, please try again.');
-                }));
-        } else if (this.props.recommendationType === 'CAMPAIGN_ADFORMAT_RECOMMENDATIONS') {
-            CancelOnUnmount.track(this, CampaignAdFormatRecommendationService
-                .addRecommendation(this.props.campaignId, recommendationText )
-                .then(recommendation => {
-                    this.setState({ recommendations: this.state.recommendations.concat(recommendation) })
-                })
-                .catch(() => {
-                    alert('Couldn\'t add recommendation, please try again.');
-                }));
-        }
     }
 
-    renderAddRecommendation(){
+    renderAddRecommendation() {
         return (
             <div>
                 <div>
-                    <textarea value={this.state.newRecommendationText} onChange={this.handleTextAreaChanged}/>
+                    <textarea value={this.state.newRecommendationText} onChange={this.handleTextAreaChanged} />
                 </div>
                 <div>
                     <button onClick={this.handleAddRecommendation}>Add</button>
@@ -115,7 +89,7 @@ export default class Recommendations extends React.Component {
                 <div>
                     {this.state.recommendations.map(r => this.renderSingleRecommendation(r.id || r.auto_optimizer_id, r.text || r.suggestion, r.username || 'auto_optimizer'))}
                 </div>
-                { (this.props.canAddRecommendation) ? this.renderAddRecommendation() : "" }
+                {(this.props.canAddRecommendation) ? this.renderAddRecommendation() : ""}
             </div>
         );
     }
