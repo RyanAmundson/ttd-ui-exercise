@@ -28,7 +28,6 @@ export default class Recommendations extends React.Component {
     }
 
     componentDidMount() {
-        console.log(this.props.recommendationService)
         CancelOnUnmount.track(this,
             this.props.recommendationService
                 .getAllRecommendations(this.props.campaignId)
@@ -36,6 +35,8 @@ export default class Recommendations extends React.Component {
                     this.setState({
                         recommendations: recommendations
                     })
+                }).catch((err) => {
+                    console.error("failed to get all recommendations: " + err);
                 }));
     }
 
