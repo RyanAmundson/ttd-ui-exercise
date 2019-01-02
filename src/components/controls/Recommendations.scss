@@ -1,10 +1,157 @@
 @import '../../main';
-
 .recommendations {
-  .recommendations__single {
-    border: 1px black solid;
-    background: white;
-    margin: 4px;
-    padding: 4px;
-  }
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
+    .recommendation-scroller {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: stretch;
+        flex: 0 0 auto;
+        .scroll-left,
+        .scroll-right {
+            display: flex;
+            align-self: stretch;
+            justify-self: stretch;
+            font-weight: 900;
+            flex: 0 0 25px;
+            z-index: 3;
+            align-items: center;
+            justify-content: center;
+            background: #084e8e;
+            color: White;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+            &:hover {
+                box-shadow: 0 0 20px #000;
+                background: darken(#084e8e, 10%);
+                cursor: pointer;
+            }
+            &.disabled {
+                background: lighten(gray, 20%)!important;
+                opacity: 0.1!important;
+                box-shadow: none!important;
+                &:hover {
+                    background: #084e8e!important;
+                    cursor: none!important;
+                }
+            }
+        }
+        .recommendation-list {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: flex-start;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            flex: 1 0 50%;
+            .single-recommendation {
+                display: flex;
+                // border: 1px black solid;
+                background: white;
+                padding: 15px;
+                margin: 5px;
+                font-size: 14px;
+                flex: 0 0 200px;
+                box-sizing: border-box;
+                height: 90px;
+                max-width: 200px;
+                word-wrap: wrap;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+                transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+                align-items: center;
+                justify-content: center;
+                transform: rotateZ(180deg);
+                transition: all 1s;
+                &:hover {
+                    background: lightgray;
+                }
+                &.flip-in {
+                    transform: rotateZ(0deg);
+                    transition: all 1s;
+                }
+            }
+            .add-recommendation {
+                display: flex;
+                background: white;
+                margin: 5px;
+                font-size: 14px;
+                word-wrap: wrap;
+                flex: 0 0 200px;
+                box-sizing: border-box;
+                height: 90px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+                transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+                align-items: stretch;
+                justify-content: stretch;
+                border: 1px solid #084e8e;
+                background: #084e8e;
+                textarea {
+                    display: flex;
+                    align-self: stretch;
+                    justify-content: stretch;
+                    border: 1px solid transparent;
+                    border-radius: 4px;
+                    flex: 1 1 auto;
+                }
+                .buttons {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: stretch;
+                    justify-content: stretch;
+                    flex: 1 1 25px;
+                    .div-button {
+                        background: #084e8e;
+                        display: flex;
+                        flex: 1 1 auto;
+                        align-items: center;
+                        justify-content: center;
+                        height: auto;
+                        color: white;
+                        font-size: 11px;
+                        font-weight: 300;
+                        &:hover {
+                            cursor: pointer;
+                            background: darken(#084e8e, 10%);
+                        }
+                    }
+                }
+            }
+            .plus-sign {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                align-self: center;
+                justify-self: center;
+                min-width: 50px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 24px;
+                background: lightgray;
+                margin: 15px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+                transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+                &:hover {
+                    transform: rotate(90deg);
+                    transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+                    background: darken(lightgray, 10%);
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+    .add-recommendation-link {
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        textarea {
+            display: flex;
+            align-self: stretch;
+            justify-content: stretch;
+            border: none;
+        }
+    }
 }
