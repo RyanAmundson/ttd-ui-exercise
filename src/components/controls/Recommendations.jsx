@@ -128,19 +128,19 @@ export default class Recommendations extends React.Component {
         } else if(this.state.addingRec && this.props.canAddRecommendation){
             entry = this.renderAddRecommendation();
         }
-        let rightScrollClasses, leftScrollClasses;
+        // let rightScrollClasses, leftScrollClasses;
         if(this.scrollBox.current != null) {
             console.log(this.scrollBox.current.scrollLeft, this.scrollBox.current.scrollWidth )
-            leftScrollClasses = classNames('scroll-left',{'disabled':this.scrollBox.current.scrollLeft == 0});
-            rightScrollClasses = (this.scrollBox.current.scrollLeft >= (this.scrollBox.current.scrollWidth - 10)) ? "scroll-right disabled" : "scroll-right" ;
+            // leftScrollClasses = classNames('scroll-left',{'disabled':this.scrollBox.current.scrollLeft == 0});
+            // rightScrollClasses = (this.scrollBox.current.scrollLeft >= (this.scrollBox.current.scrollWidth - 10)) ? "scroll-right disabled" : "scroll-right" ;
         }
-        console.log(leftScrollClasses)
+        // console.log(leftScrollClasses)
 
 
         return ( 
             <div className="recommendations"> 
                 <div className="recommendation-scroller">
-                    <span className={leftScrollClasses} onClick={this.handleScrollLeft} >
+                    <span onClick={this.handleScrollLeft} >
                         <FontAwesomeIcon icon="caret-left" />
                     </span>
                     <div className="recommendation-list" ref={this.scrollBox}>
@@ -157,7 +157,7 @@ export default class Recommendations extends React.Component {
                         &nbsp;
                     </div>
 
-                    <span className={rightScrollClasses} onClick={this.handleScrollRight}>
+                    <span onClick={this.handleScrollRight}>
                         <FontAwesomeIcon icon="caret-right" />
                     </span>
                 </div>
