@@ -1,13 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import CancelOnUnmount from '../../services/CancelOnUnmount.js'
-import CampaignCoreSettingsRecommendationService from '../../services/CampaignCoreSettingsRecommendationService';
-import CampaignGeoRecommendationService from '../../services/CampaignGeoRecommendationService';
-import CampaignAdFormatRecommendationService from '../../services/CampaignAdFormatRecommendationService';
 import './Recommendations.scss'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faIgloo, faCaretRight, faCaretLeft, faPlus } from '@fortawesome/free-solid-svg-icons'
+import {faCaretRight, faCaretLeft, faPlus, faRecycle } from '@fortawesome/free-solid-svg-icons'
 import { ScrollUtil } from '../../services/util/ScrollUtil.js';
 
 library.add(faCaretRight);
@@ -30,15 +27,32 @@ export default class Recommendations extends React.Component {
         this.state = {
             newRecommendationText: '',
             recommendations: [],
-            addingRec: false
+            addingRec: false,
+            disableLeftScroll: true,
+            disableRightScroll: false,
+            scrollSpeed: 10,
+            scrollDistance: 200,
+            scrollStep: 10,
+            savingNewRec: false,
         };
 
         this.handleAddRecommendation = this.handleAddRecommendation.bind(this);
         this.handleTextAreaChanged = this.handleTextAreaChanged.bind(this);
         this.handleScrollLeft = this.handleScrollLeft.bind(this);
-        this.handleScrollRight = this.handleScrollRight.bind(this);
-        this.handleShowAddRecommendation = this.handleShowAddRecommendation.bind(this);
+        this.handleScrollRight = this.handleScrollRight.bind(this);   
+        this.handleScrollLeftEnd = this.handleScrollLeftEnd.bind(this);
+        this.handleScrollRightEnd = this.handleScrollRightEnd.bind(this);      
+        this.handleShowAddRecommendation = this.handleShowAddRecommendation.bind(this);  
         this.handleHideAddRecommendation = this.handleHideAddRecommendation.bind(this);
+
+        setInterval(() => {
+            if(this.scrollBox && this.scrollBox.current){
+                this.setState({
+                    disableLeftScroll: this.scrollBox.current.scrollLeft === 0,
+                    disableRightScroll: this.scrollBox.current.clientWidth + this.scrollBox.current.scrollLeft >= (this.scrollBox.current.scrollWidth)
+                });
+            }
+        },500);
     }
 
     componentDidMount() {
@@ -49,6 +63,7 @@ export default class Recommendations extends React.Component {
                     this.setState({
                         recommendations: recommendations
                     })
+                    console.log(recommendations)
                 }).catch((err) => {
                     console.error("failed to get all recommendations: " + err);
                 }));
@@ -58,13 +73,13 @@ export default class Recommendations extends React.Component {
         CancelOnUnmount.handleUnmount(this);
     }
 
-    handleShowAddRecommendation(){
-        this.setState({ addingRec: true });
-        ScrollUtil.sideScroll(this.scrollBox.current, 'right', 10, 1000, 10);
-    }
-
     handleHideAddRecommendation(){
         this.setState({addingRec: false});
+    }
+
+    handleShowAddRecommendation(){
+        this.setState({addingRec: true});
+        ScrollUtil.sideScroll(this.scrollBox.current, 'right', this.state.scrollSpeed, this.scrollBox.current.clientWidth, this.state.scrollStep);
     }
 
     handleTextAreaChanged(e) {
@@ -73,28 +88,41 @@ export default class Recommendations extends React.Component {
 
     handleAddRecommendation() {
         if (this.state.newRecommendationText == "" || null) return;
+        this.setState({savingNewRec:true});
 
         CancelOnUnmount.track(this, this.props.recommendationService
             .addRecommendation(this.props.campaignId, this.state.newRecommendationText)
             .then(recommendation => {
                 this.setState({ recommendations: this.state.recommendations.concat(recommendation) });
                 this.setState({ newRecommendationText: '' });
-                ScrollUtil.sideScroll(this.scrollBox.current, 'right', 10, 1000, 10);
+                ScrollUtil.sideScroll(this.scrollBox.current, 'right', this.state.scrollSpeed, this.scrollBox.current.clientWidth, this.state.scrollStep);
                 this.setState({addingRec: false});
+                this.setState({savingNewRec:false});
             })
             .catch(() => {
                 alert('Couldn\'t add recommendation, please try again.');
+                this.setState({addingRec: true});
+                this.setState({savingNewRec:false});
             }));
 
     }
 
     handleScrollLeft(e) {
-        ScrollUtil.sideScroll(this.scrollBox.current, 'left', 10, 200, 10);
+        ScrollUtil.sideScroll(this.scrollBox.current, 'left', this.state.scrollSpeed, this.state.scrollDistance, this.state.scrollStep);
         this.render();
     }
 
     handleScrollRight(e) {
-        ScrollUtil.sideScroll(this.scrollBox.current, 'right', 10, 200, 10);
+        ScrollUtil.sideScroll(this.scrollBox.current, 'right', this.state.scrollSpeed, this.state.scrollDistance, this.state.scrollStep);
+        this.render();
+    }
+
+    handleScrollRightEnd(e) {
+        ScrollUtil.sideScroll(this.scrollBox.current, 'right', this.state.scrollSpeed, this.scrollBox.current.clientWidth, this.state.scrollStep);
+        this.render();
+    }
+    handleScrollLeftEnd(e) {
+        ScrollUtil.sideScroll(this.scrollBox.current, 'left', this.state.scrollSpeed, this.scrollBox.current.clientWidth, this.state.scrollStep);
         this.render();
     }
 
@@ -109,6 +137,7 @@ export default class Recommendations extends React.Component {
             </div>
         )
     }
+    
     renderSingleRecommendation(id, recommendationText) {
         return (
             <div key={id} className="single-recommendation flip-in">
@@ -118,36 +147,31 @@ export default class Recommendations extends React.Component {
     }
 
     render() {
-        console.log(this.scrollBox)
-        let entry = null;
+        let entry;
         if (!this.state.addingRec && this.props.canAddRecommendation) {
             entry = 
             <div className="plus-sign" onClick={this.handleShowAddRecommendation}>
                 <FontAwesomeIcon icon="plus" />
             </div>
-        } else if(this.state.addingRec && this.props.canAddRecommendation){
+        } else if(this.state.addingRec && this.props.canAddRecommendation && !this.state.savingNewRec){
             entry = this.renderAddRecommendation();
+        } else if (this.state.savingNewRec){
+            entry = <div className="add-recommendation loading"> Saving... </div>;
+
         }
-        // let rightScrollClasses, leftScrollClasses;
-        if(this.scrollBox.current != null) {
-            console.log(this.scrollBox.current.scrollLeft, this.scrollBox.current.scrollWidth )
-            // leftScrollClasses = classNames('scroll-left',{'disabled':this.scrollBox.current.scrollLeft == 0});
-            // rightScrollClasses = (this.scrollBox.current.scrollLeft >= (this.scrollBox.current.scrollWidth - 10)) ? "scroll-right disabled" : "scroll-right" ;
-        }
-        // console.log(leftScrollClasses)
 
 
         return ( 
             <div className="recommendations"> 
                 <div className="recommendation-scroller">
-                    <span onClick={this.handleScrollLeft} >
+                    <span className={this.state.disableLeftScroll ? "scroll-left disabled" : "scroll-left"} onClick={this.handleScrollLeft} onDoubleClick={this.handleScrollLeftEnd} >
                         <FontAwesomeIcon icon="caret-left" />
                     </span>
                     <div className="recommendation-list" ref={this.scrollBox}>
                         {
                             this.state.recommendations.map
                                 (
-                                    r => this.renderSingleRecommendation(r.id || r.auto_optimizer_id, r.text || r.suggestion, r.username || 'auto_optimizer')
+                                    r => this.renderSingleRecommendation(r.id || r.auto_optimizer_id, r.text || r.suggestion || r.auto_optimizer_explanation, r.username || 'auto_optimizer')
                                 )
                         }
                         {
@@ -157,14 +181,10 @@ export default class Recommendations extends React.Component {
                         &nbsp;
                     </div>
 
-                    <span onClick={this.handleScrollRight}>
+                    <span className={this.state.disableRightScroll ? "scroll-right disabled" : "scroll-right"} onClick={this.handleScrollRight} onDoubleClick={this.handleScrollRightEnd}>
                         <FontAwesomeIcon icon="caret-right" />
                     </span>
                 </div>
-                <div>
-                    <a href="" >Add Recommendation</a>
-                </div>
-
             </div>
         );
     }
