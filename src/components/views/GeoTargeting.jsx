@@ -1,189 +1,224 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import InputForm from '../controls/InputForm.jsx';
-import CampaignService from '../../services/CampaignService.js'
-import CancelOnUnmount from '../../services/CancelOnUnmount.js'
-import GeoService from '../../services/GeoService.js'
-import GeoCheckboxList from '../controls/GeoCheckboxList.jsx'
-import Recommendations from '../controls/Recommendations.jsx'
-import CampaignGeoRecommendationService from '../../services/CampaignGeoRecommendationService.js';
+import React from "react";
+import PropTypes from "prop-types";
+import InputForm from "../controls/InputForm.jsx";
+import CampaignService from "../../services/CampaignService.js";
+import CancelOnUnmount from "../../services/CancelOnUnmount.js";
+import GeoService from "../../services/GeoService.js";
+import GeoCheckboxList from "../controls/GeoCheckboxList.jsx";
+import Recommendations from "../controls/Recommendations.jsx";
+import CampaignGeoRecommendationService from "../../services/CampaignGeoRecommendationService.js";
 
 export default class GeoTargeting extends React.Component {
+  static propTypes = {
+    campaignId: PropTypes.string.isRequired
+  };
 
-    static propTypes = {
-        campaignId: PropTypes.string.isRequired,
+  constructor(props) {
+    super(props);
+
+    this.handleSaveButtonClicked = this.handleSaveButtonClicked.bind(this);
+    this.handleToggleGeo = this.handleToggleGeo.bind(this);
+    this.handleGetIsGeoChecked = this.handleGetIsGeoChecked.bind(this);
+    this.handleGeoSearchChanged = this.handleGeoSearchChanged.bind(this);
+    this.handleRetry = this.handleRetry.bind(this);
+    this.initialCityLoad = this.initialCityLoad.bind(this);
+
+    this.state = {
+      isError: false,
+      isSaving: false,
+      isLoadingGeos: true,
+      searchText: "",
+      isLoadingSelectedGeos: true,
+      selectedGeoIds: [],
+      allGeos: [],
+      onRetry: this.initialCityLoad,
+      searchDelayId: null
     };
+  }
 
-    constructor(props) {
-        super(props);
-
-        this.handleSaveButtonClicked = this.handleSaveButtonClicked.bind(this);
-        this.handleToggleGeo = this.handleToggleGeo.bind(this);
-        this.handleGetIsGeoChecked = this.handleGetIsGeoChecked.bind(this);
-        this.handleGeoSearchChanged = this.handleGeoSearchChanged.bind(this);
-        this.handleRetry = this.handleRetry.bind(this);
-        this.initialCityLoad = this.initialCityLoad.bind(this);
-
-
-        this.state = {
-            isError: false,
-            isSaving: false,
-            isLoadingGeos: true,
-            searchText: '',
-            isLoadingSelectedGeos: true,
-            selectedGeoIds: [],
-            allGeos: [],
-            onRetry: this.initialCityLoad
-        };
-    }
-
-    refreshAllCities() {
-        const promise = GeoService.getAllCities('city_name', false).then(allCities => {
-            this.setState({
-                allGeos: allCities,
-                isLoadingGeos: false
-            });
-        });
-
-        CancelOnUnmount.track(this, promise);
-
-        return promise;
-    }
-
-    initialCityLoad() {
+  refreshAllCities() {
+    const promise = GeoService.getAllCities("city_name", false).then(
+      allCities => {
         this.setState({
-            isLoadingGeos: true,
-            isLoadingSelectedGeoIds: true
+          allGeos: allCities,
+          isLoadingGeos: false
         });
+      }
+    );
 
-        const refreshAllPromise = this.refreshAllCities();
-        const getSelectedPromise = CampaignService.getSelectedGeoIds(this.props.campaignId).then(selectedIds => {
-            this.setState({
-                selectedGeoIds: selectedIds,
-                isLoadingSelectedGeoIds: false
-            });
-        });
+    CancelOnUnmount.track(this, promise);
 
-        CancelOnUnmount.track(this, Promise.all([refreshAllPromise, getSelectedPromise]).catch(() => {
-            this.setState({
-                isError: true,
-                isLoadingGeos: false,
-                isLoadingSelectedGeoIds: false,
-                onRetry: this.initialCityLoad
-            });
-        }));
-    }
+    return promise;
+  }
 
+  initialCityLoad() {
+    this.setState({
+      isLoadingGeos: true,
+      isLoadingSelectedGeoIds: true
+    });
 
-    handleRetry() {
+    const refreshAllPromise = this.refreshAllCities();
+    const getSelectedPromise = CampaignService.getSelectedGeoIds(
+      this.props.campaignId
+    ).then(selectedIds => {
+      this.setState({
+        selectedGeoIds: selectedIds,
+        isLoadingSelectedGeoIds: false
+      });
+    });
+
+    CancelOnUnmount.track(
+      this,
+      Promise.all([refreshAllPromise, getSelectedPromise]).catch(() => {
         this.setState({
-            isError: false
+          isError: true,
+          isLoadingGeos: false,
+          isLoadingSelectedGeoIds: false,
+          onRetry: this.initialCityLoad
         });
+      })
+    );
+  }
 
-        this.state.onRetry();
+  handleRetry() {
+    this.setState({
+      isError: false
+    });
+
+    this.state.onRetry();
+  }
+
+  componentDidMount() {
+    this.initialCityLoad();
+  }
+
+  componentWillUnmount() {
+    CancelOnUnmount.handleUnmount(this);
+  }
+
+  handleToggleGeo(item) {
+    const ids = this.state.selectedGeoIds;
+
+    if (ids.indexOf(item.geoId) >= 0) {
+      this.setState({
+        selectedGeoIds: ids.filter(id => id !== item.geoId)
+      });
+    } else {
+      this.setState({
+        selectedGeoIds: ids.concat(item.geoId)
+      });
+    }
+  }
+
+  handleGetIsGeoChecked(item) {
+    return this.state.selectedGeoIds.indexOf(item.geoId) >= 0;
+  }
+
+  handleGeoSearchChanged(newSearch) {
+    if (!this.state.searchDelayId === null) {
+      clearInterval(this.state.searchDelayId);
     }
 
-    componentDidMount() {
-        this.initialCityLoad();
+    if (newSearch !== undefined) {
+      this.setState({
+        searchText: newSearch
+      });
     }
 
-    componentWillUnmount() {
-        CancelOnUnmount.handleUnmount(this);
-    }
+    //delay the search to prevent unneccesary server calls
+    this.state.searchDelayId = setTimeout(() => {
+      this.runSearch(newSearch);
+    }, 500);
+  }
 
-    handleToggleGeo(item) {
-        const ids = this.state.selectedGeoIds;
-
-        if (ids.indexOf(item.geoId) >= 0) {
-            this.setState({
-                selectedGeoIds: ids.filter(id => id !== item.geoId)
-            });
-        } else {
-            this.setState({
-                selectedGeoIds: ids.concat(item.geoId)
-            });
-        }
-    }
-
-    handleGetIsGeoChecked(item) {
-        return this.state.selectedGeoIds.indexOf(item.geoId) >= 0;
-    }
-
-    handleGeoSearchChanged(newSearch) {
-        if (newSearch !== undefined) {
-            this.setState({
-                searchText: newSearch
-            });
-        } else {
-            newSearch = this.state.searchText;
-        }
-
-        if (!newSearch || newSearch.length === 0) {
-            this.refreshAllCities().catch(() => {
-                this.setState({
-                    isError: true,
-                    onRetry: this.handleGeoSearchChanged
-                });
-            });
-        } else {
-            CancelOnUnmount.track(this, GeoService.getCitiesPaged(newSearch, 'city_name', false, 0, 100).then(someCities => {
-                this.setState({
-                    allGeos: someCities
-                });
-            }).catch(() => {
-                this.setState({
-                    isError: true,
-                    onRetry: this.handleGeoSearchChanged
-                });
-            }));
-        }
-    }
-
-    handleSaveButtonClicked() {
+  //actually search or refresh all cities
+  runSearch(newSearch) {
+    if (this.state.searchText && this.state.searchText.length === 0) {
+      this.refreshAllCities().catch(() => {
         this.setState({
-            isSaving: true
+          isError: true,
+          onRetry: this.handleGeoSearchChanged
         });
-
-        CancelOnUnmount.track(
-            this,
-            CampaignService
-                .saveSelectedGeoIds(this.props.campaignId, this.state.selectedGeoIds)
-                .catch(() => {
-                    this.setState({
-                        isError: true,
-                        onRetry: this.handleSaveButtonClicked
-                    });
-                })
-                .finally(() => {
-                    this.setState({
-                        isSaving: false
-                    });
-                })
-        );
+      });
+    } else {
+      CancelOnUnmount.track(
+        this,
+        (this.state.searchPromise = GeoService.getCitiesPaged(
+          this.state.searchText,
+          "city_name",
+          false,
+          0,
+          100
+        ) 
+          .then(someCities => { 
+            if (newSearch == this.state.searchText) {
+              this.setState({
+                allGeos: someCities
+              });
+            }
+          })
+          .catch(() => {
+            this.setState({
+              isError: true,
+              onRetry: this.handleGeoSearchChanged
+            });
+          }))
+      );
     }
+  }
 
-    render() {
-        return (
-            <div>
-                <InputForm
-                    onSubmit={this.handleSaveButtonClicked}
-                    onRetry={this.handleRetry}
-                    isError={this.state.isError}
-                    isLoading={this.state.isLoadingGeos || this.state.isLoadingSelectedGeoIds}
-                    isSaving={this.state.isSaving}>
-                    <GeoCheckboxList
-                        items={this.state.allGeos}
-                        searchText={this.state.searchText}
-                        onSearchChanged={this.handleGeoSearchChanged}
-                        onToggleItem={this.handleToggleGeo}
-                        getIsChecked={this.handleGetIsGeoChecked}
-                    />
-                </InputForm>
-                <Recommendations recommendationType='CAMPAIGN_GEO_RECOMMENDATIONS' 
-                                campaignId={this.props.campaignId}  
-                                canAddRecommendation={false}
-                                recommendationService={CampaignGeoRecommendationService}/>
-            </div>
-        );
-    }
+  handleSaveButtonClicked() {
+    this.setState({
+      isSaving: true
+    });
+
+    CancelOnUnmount.track(
+      this,
+      CampaignService.saveSelectedGeoIds(
+        this.props.campaignId,
+        this.state.selectedGeoIds
+      )
+        .catch(() => {
+          this.setState({
+            isError: true,
+            onRetry: this.handleSaveButtonClicked
+          });
+        })
+        .finally(() => {
+          this.setState({
+            isSaving: false
+          });
+        })
+    );
+  }
+
+  render() {
+    return (
+      <div>
+        <Recommendations
+          recommendationType="CAMPAIGN_GEO_RECOMMENDATIONS"
+          campaignId={this.props.campaignId}
+          canAddRecommendation={false}
+          recommendationService={CampaignGeoRecommendationService}
+        />
+        <InputForm
+          onSubmit={this.handleSaveButtonClicked}
+          onRetry={this.handleRetry}
+          isError={this.state.isError}
+          isLoading={
+            this.state.isLoadingGeos || this.state.isLoadingSelectedGeoIds
+          }
+          isSaving={this.state.isSaving}
+        >
+          <GeoCheckboxList
+            items={this.state.allGeos}
+            searchText={this.state.searchText}
+            onSearchChanged={this.handleGeoSearchChanged}
+            onToggleItem={this.handleToggleGeo}
+            getIsChecked={this.handleGetIsGeoChecked}
+          />
+        </InputForm>
+      </div>
+    );
+  }
 }
